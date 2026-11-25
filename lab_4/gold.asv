@@ -1,0 +1,41 @@
+L = 31;
+
+a = gold(14, 21, L);   % x = 01110, y = 10101
+b = gold(15, 16, L);   % x = 01111, y = 10000
+
+disp(a);
+
+% 0 -> -1, 1 -> +1
+sa = 2*a - 1;
+sb = 2*b - 1;
+
+% периодическая автокорреляция (последовательность продублирована)
+[r, lags] = xcorr([sa sa], sa);
+R = r(lags >= 0 & lags <= L-1) / L;
+
+% таблица
+for k = 0:L-1
+    fprintf('%2d | %s | %.4f\n', k, num2str(circshift(a, -k), '%d'), R(k+1));
+end
+
+% взаимная корреляция
+fprintf('Взаимная корреляция: %.4f\n', sum(sa .* sb) / L);
+
+% график автокорреляции
+figure;
+stem(0:L-1, R); grid on;
+xlabel('Задержка (lag)'); ylabel('Автокорреляция');
+
+% ---- функция (в конце файла) ----
+function out = gold_sec(xn, yn, L)
+    x = bitget(xn, 5:-1:1);
+    y = bitget(yn, 5:-1:1);
+    out = zeros(1, L);
+    for t = 1:L
+        out(t) = xor(x(5), y(5));
+        fx = xor(x(4), x(5));
+        fy = xor(y(2), y(5));
+        x = [fx x(1:4)];
+        y = [fy y(1:4)];
+    end
+end
